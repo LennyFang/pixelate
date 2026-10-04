@@ -1,0 +1,26 @@
+[project]
+name = "pixelate"
+version = "0.1.0"
+description = "A fun tool to pixel images and add filters"
+readme = "README.md"
+authors = [
+    { name = "lenny", email = "268398021+LennyFang@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.5.3",
+    "opencv-python>=5.0.0.93",
+]
+
+[project.scripts]
+pixelate = "pixelate.main:main"
+
+[build-system]
+requires = ["uv_build>=0.12.21,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.9",
+]
