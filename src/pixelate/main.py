@@ -1,21 +1,38 @@
 import cv2 as cv
 import numpy as np
+import ffmpeg
+import os
 
 PALETTE = "test.png"
 PIXEL_SIZE = 10
 
+TEMP_VIDEO_PATH = "temp_video.mp4"
+
 
 def main():
     pal = read_palette(PALETTE)
-    process_video("test.mp4", pal)
+    process_video("test.webm", pal)
+    add_audio_to_export(TEMP_VIDEO_PATH, "test.webm", "complete_output.mp4", True)
+
+
+def add_audio_to_export(temp_video_path: str, original_video_path: str, output_path: str, keep_temp: bool):
+    video_input = ffmpeg.input(temp_video_path)
+    audio_input = ffmpeg.input(original_video_path).audio
+
+    ffmpeg.output(video_input, audio_input, output_path).run()
+
+    if not keep_temp:
+        print(" --- Cleaning temp video file --- ")
+        os.remove(video_path)
+        print(" --- Removed temp video file --- ")
 
 
 def read_palette(path: str) -> np.ndarray:
     return cv.imread(path, cv.IMREAD_COLOR).reshape(-1, 3).astype(np.float32)
 
 
-def process_video(path: str, palette_array: np.ndarray):
-    video = cv.VideoCapture(path)
+def process_video(original_video_path: str, palette_array: np.ndarray):
+    video = cv.VideoCapture(original_video_path)
 
     video_width = int(video.get(cv.CAP_PROP_FRAME_WIDTH))
     video_height = int(video.get(cv.CAP_PROP_FRAME_HEIGHT))
@@ -27,7 +44,7 @@ def process_video(path: str, palette_array: np.ndarray):
     )
 
     output_video = cv.VideoWriter(
-        "output.mp4",
+        TEMP_VIDEO_PATH,
         cv.VideoWriter_fourcc(*"mp4v"),
         video_fps,
         (video_width, video_height),
