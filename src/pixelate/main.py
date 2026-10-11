@@ -14,9 +14,13 @@ def main():
     pal = read_palette(PALETTE)
     # process_video("test.webm", pal)
     # process_video_chunk("test.webm", pal, 0, 0, 60)
-    process_video_with_multiprocessing("test.webm", pal, 4)
-    # add_audio_to_export(TEMP_VIDEO_PATH, "test.webm", "complete_output.mp4", True)
+    process_video_with_multiprocessing("test.webm", pal, 12)
+    concat_all_temp_videos(12)
+    add_audio_to_export("combined_video.mp4", "test.webm", "complete_output.mp4", True)
     # ffmpeg.concat(ffmpeg.input("complete_output.mp4"), ffmpeg.input("complete_output_p5.mp4")).output("combined_video.mp4").run()
+
+def concat_all_temp_videos(video_amount: int):
+        ffmpeg.concat(*[ffmpeg.input(f"temp_video_{i}.mp4") for i in range(video_amount)]).output("combined_video.mp4").run()
 
 
 def add_audio_to_export(
