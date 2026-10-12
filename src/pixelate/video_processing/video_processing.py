@@ -8,6 +8,7 @@ PIXEL_SIZE = 10
 
 TEMP_VIDEO_PATH = "temp_video.mp4"
 
+
 class VideoMetadata:
     def __init__(self, file_path: str):
         video = cv.VideoCapture(file_path)

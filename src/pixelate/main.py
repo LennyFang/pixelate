@@ -5,6 +5,7 @@ from pixelate.ffmpeg_util import ffmpeg_util
 
 PALETTE = "test.png"
 
+
 def main():
     pal = read_palette(PALETTE)
     video_metadata = video_processing.VideoMetadata("test.webm")
@@ -14,7 +15,9 @@ def main():
     # video_processing.generate_video_preview_images(video_metadata, pal, 6)
     video_processing.process_video_with_multiprocessing("test.webm", pal, 12)
     ffmpeg_util.concat_all_temp_videos(12)
-    ffmpeg_util.add_audio_to_export("combined_video.mp4", "test.webm", "complete_output.mp4", True)
+    ffmpeg_util.add_audio_to_export(
+        "combined_video.mp4", "test.webm", "complete_output.mp4", True
+    )
     # ffmpeg.concat(ffmpeg.input("complete_output.mp4"), ffmpeg.input("complete_output_p5.mp4")).output("combined_video.mp4").run()
 
 
