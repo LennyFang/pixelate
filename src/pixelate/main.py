@@ -29,7 +29,8 @@ def main():
     video_metadata = VideoMetadata("test.webm")
     # process_video("test.webm", pal)
     # process_video_chunk("test.webm", pal, 0, 0, 60)
-    process_video_preview_image(video_metadata, pal, 10.5)
+    # process_video_preview_image(video_metadata, pal, 10.5)
+    generate_video_preview_images(video_metadata, pal, 6)
     # process_video_with_multiprocessing("test.webm", pal, 12)
     # concat_all_temp_videos(12)
     # add_audio_to_export("combined_video.mp4", "test.webm", "complete_output.mp4", True)
@@ -60,8 +61,23 @@ def read_palette(path: str) -> np.ndarray:
     return cv.imread(path, cv.IMREAD_COLOR).reshape(-1, 3).astype(np.float32)
 
 
+def generate_video_preview_images(
+    video_metadata: VideoMetadata, palette_array: np.ndarray, n: int
+):
+    # We will generate n preview images which the first one being the first frame of the video
+    # and then other n-1 being evenly spaces throughout the video
+    interval = video_metadata.duration / n
+    for i in range(n):
+        process_video_preview_image(
+            video_metadata, palette_array, interval * i, f"preview_{i}.png"
+        )
+
+
 def process_video_preview_image(
-    video_metadata: VideoMetadata, palette_array: np.ndarray, timestamp: float
+    video_metadata: VideoMetadata,
+    palette_array: np.ndarray,
+    timestamp: float,
+    output_path: str,
 ):
     assert timestamp >= 0
     video = cv.VideoCapture(video_metadata.file_path)
@@ -117,7 +133,7 @@ def process_video_preview_image(
     )
 
     # Write the frame to the image, no resize here because we can do it on the frontend so we can save space here
-    cv.imwrite("preview.png", pixelated)
+    cv.imwrite(output_path, pixelated)
 
 
 def process_video_with_multiprocessing(
