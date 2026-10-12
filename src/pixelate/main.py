@@ -10,17 +10,36 @@ PIXEL_SIZE = 10
 TEMP_VIDEO_PATH = "temp_video.mp4"
 
 
+class VideoMetadata:
+    def __init__(self, file_path: str):
+        video = cv.VideoCapture(file_path)
+
+        self.file_path = file_path
+        self.width = int(video.get(cv.CAP_PROP_FRAME_WIDTH))
+        self.height = int(video.get(cv.CAP_PROP_FRAME_HEIGHT))
+        self.fps = video.get(cv.CAP_PROP_FPS)
+        self.frame_count = int(video.get(cv.CAP_PROP_FRAME_COUNT))
+        self.duration = self.frame_count / self.fps  # in seconds
+
+        video.release()
+
+
 def main():
     pal = read_palette(PALETTE)
+    video_metadata = VideoMetadata("test.webm")
     # process_video("test.webm", pal)
     # process_video_chunk("test.webm", pal, 0, 0, 60)
-    process_video_with_multiprocessing("test.webm", pal, 12)
-    concat_all_temp_videos(12)
-    add_audio_to_export("combined_video.mp4", "test.webm", "complete_output.mp4", True)
+    process_video_preview_image(video_metadata, pal, 10.5)
+    # process_video_with_multiprocessing("test.webm", pal, 12)
+    # concat_all_temp_videos(12)
+    # add_audio_to_export("combined_video.mp4", "test.webm", "complete_output.mp4", True)
     # ffmpeg.concat(ffmpeg.input("complete_output.mp4"), ffmpeg.input("complete_output_p5.mp4")).output("combined_video.mp4").run()
 
+
 def concat_all_temp_videos(video_amount: int):
-        ffmpeg.concat(*[ffmpeg.input(f"temp_video_{i}.mp4") for i in range(video_amount)]).output("combined_video.mp4").run()
+    ffmpeg.concat(
+        *[ffmpeg.input(f"temp_video_{i}.mp4") for i in range(video_amount)]
+    ).output("combined_video.mp4").run()
 
 
 def add_audio_to_export(
@@ -39,6 +58,66 @@ def add_audio_to_export(
 
 def read_palette(path: str) -> np.ndarray:
     return cv.imread(path, cv.IMREAD_COLOR).reshape(-1, 3).astype(np.float32)
+
+
+def process_video_preview_image(
+    video_metadata: VideoMetadata, palette_array: np.ndarray, timestamp: float
+):
+    assert timestamp >= 0
+    video = cv.VideoCapture(video_metadata.file_path)
+
+    assert timestamp < (video_metadata.frame_count / video_metadata.fps)
+
+    start_frame = int(video_metadata.fps * timestamp)
+
+    video.set(cv.CAP_PROP_POS_FRAMES, start_frame - 1)
+
+    ok, image = video.read()
+    if not ok:
+        print("Unable to read frame of video")
+
+    video.release()
+
+    # Reshape the image to group up the pixels by the PIXEL_SIZE and get the mean of the RGB values
+    # we cast as a float32 here so we don't run into overflow issues when we do the squared distance computations
+    group_pixel_mean = (
+        image.reshape(
+            video_metadata.height // PIXEL_SIZE,
+            PIXEL_SIZE,
+            video_metadata.width // PIXEL_SIZE,
+            PIXEL_SIZE,
+            3,
+        )
+        .mean(axis=(1, 3))
+        .clip(0, 255)
+        .astype(np.float32)
+    )
+
+    # Calculates the squared eculidean distance of each pixel to each colour on the palette
+    # There is some forbidden numpy broadcasting here that I don't really understand
+    squared_distances = np.sum(
+        (
+            group_pixel_mean.reshape(-1, 3)[:, None, :]
+            - palette_array.astype(np.float32)[None, :, :]
+        )
+        ** 2,
+        axis=2,
+    )
+
+    # Take the index of the palette colour with the least sqaured distance
+    colour_indexes = np.argmin(squared_distances, axis=1)
+
+    # Map the indexes to the actual colours on the palette
+    pixelated = (
+        palette_array[colour_indexes]
+        .reshape(
+            video_metadata.height // PIXEL_SIZE, video_metadata.width // PIXEL_SIZE, 3
+        )
+        .astype(np.uint8)
+    )
+
+    # Write the frame to the image, no resize here because we can do it on the frontend so we can save space here
+    cv.imwrite("preview.png", pixelated)
 
 
 def process_video_with_multiprocessing(
