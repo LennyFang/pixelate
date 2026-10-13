@@ -1,19 +1,31 @@
 import cv2 as cv
 import numpy as np
-from pixelate.video_processing import video_processing
-from pixelate.ffmpeg_util import ffmpeg_util
 
-PALETTE = "test.png"
+from pixelate.ffmpeg_util import ffmpeg_util
+from pixelate.video_processing import video_processing
+
+
+class Context:
+    def __init__(
+        self, video_path: str, palette_path: str, output_dir: str, pixel_size: int
+    ):
+        # TODO: Add some error checking to make sure the file exitst on the system
+        self.video_metadata = video_processing.VideoMetadata(video_path)
+        self.palette = read_palette(palette_path)
+        self.palete_path = palette_path
+        self.output_dir = output_dir
+        self.pixel_size = pixel_size
+
+    def set_video_metadata(self, video_path: str):
+        pass
+
+    def set_palette(self, palette_path: str):
+        pass
 
 
 def main():
-    pal = read_palette(PALETTE)
-    video_metadata = video_processing.VideoMetadata("test.webm")
-    # process_video("test.webm", pal)
-    # process_video_chunk("test.webm", pal, 0, 0, 60)
-    # process_video_preview_image(video_metadata, pal, 10.5)
-    # video_processing.generate_video_preview_images(video_metadata, pal, 6)
-    video_processing.process_video_with_multiprocessing("test.webm", pal, 12)
+    ctx = Context("test.webm", "test.png", "output", 10)
+    ctx.video_metadata.process_video_with_multiprocessing(ctx.palette, ctx.pixel_size, 12)
     ffmpeg_util.concat_all_temp_videos(12)
     ffmpeg_util.add_audio_to_export(
         "combined_video.mp4", "test.webm", "complete_output.mp4", True
