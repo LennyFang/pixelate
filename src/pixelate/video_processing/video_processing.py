@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import os.path
 
 import cv2 as cv
 import numpy as np
@@ -19,13 +20,14 @@ class VideoMetadata:
 
         video.release()
 
-    def generate_video_preview_images(self, palette_array: np.ndarray, n: int):
+    def generate_video_preview_images(self, palette_array: np.ndarray, n: int, output_dir: str):
+        #TODO: Make sure to have
         # We will generate n preview images which the first one being the first frame of the video
         # and then other n-1 being evenly spaces throughout the video
         interval = self.duration / n
         for i in range(n):
             self.process_video_preview_image(
-                palette_array, interval * i, f"{PREVIEW_IMAGE_PREFIX}_{i}.png"
+                palette_array, interval * i, os.path.join(output_dir, f"{PREVIEW_IMAGE_PREFIX}_{i}.png")
             )
 
     def process_video_preview_image(
@@ -90,7 +92,7 @@ class VideoMetadata:
         cv.imwrite(output_path, pixelated)
 
     def process_video_with_multiprocessing(
-        self, palette_array: np.ndarray, pixel_size: int, process_count: int
+            self, palette_array: np.ndarray, pixel_size: int, process_count: int, output_dir: str
     ):
         # Get general meta data on video
 
@@ -109,6 +111,7 @@ class VideoMetadata:
                         i,
                         i * frame_per_process,
                         (i + 1) * frame_per_process,
+                        output_dir,
                     ),
                 )
             )
@@ -123,6 +126,7 @@ class VideoMetadata:
                     process_count - 1,
                     (process_count - 1) * frame_per_process,
                     self.frame_count,
+                    output_dir,
                 ),
             )
         )
@@ -131,6 +135,7 @@ class VideoMetadata:
         for process in processes:
             process.join()
 
+
     def process_video_chunk(
         self,
         palette_array: np.ndarray,
@@ -138,6 +143,7 @@ class VideoMetadata:
         index: int,
         start_frame: int,
         end_frame: int,
+        output_dir: str,
     ):
         print(f"Begining Process {index}")
         video = cv.VideoCapture(self.file_path)
@@ -147,7 +153,7 @@ class VideoMetadata:
         processed_count = 0
 
         output_video = cv.VideoWriter(
-            f"{TEMP_VIDEO_PREFIX}_{index}.mp4",
+            os.path.join(output_dir, f"{TEMP_VIDEO_PREFIX}_{index}.mp4"),
             cv.VideoWriter_fourcc(*"mp4v"),
             self.fps,
             (self.width, self.height),
