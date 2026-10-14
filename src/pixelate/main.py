@@ -1,40 +1,19 @@
-import cv2 as cv
-import numpy as np
-
 from pixelate.ffmpeg_util import ffmpeg_util
+from pixelate.util import util
 from pixelate.video_processing import video_processing
 
 
-class Context:
-    def __init__(
-        self, video_path: str, palette_path: str, output_dir: str, pixel_size: int
-    ):
-        # TODO: Add some error checking to make sure the file exitst on the system
-        self.video_metadata = video_processing.VideoMetadata(video_path)
-        self.palette = read_palette(palette_path)
-        self.palete_path = palette_path
-        self.output_dir = output_dir
-        self.pixel_size = pixel_size
-
-    def set_video_metadata(self, video_path: str):
-        pass
-
-    def set_palette(self, palette_path: str):
-        pass
-
-
 def main():
-    ctx = Context("test.webm", "test.png", "output", 10)
-    ctx.video_metadata.process_video_with_multiprocessing(ctx.palette, ctx.pixel_size, 12)
-    ffmpeg_util.concat_all_temp_videos(12)
-    ffmpeg_util.add_audio_to_export(
-        "combined_video.mp4", "test.webm", "complete_output.mp4", True
-    )
-    # ffmpeg.concat(ffmpeg.input("complete_output.mp4"), ffmpeg.input("complete_output_p5.mp4")).output("combined_video.mp4").run()
+    ctx, ok = util.Context.create("test.png", "output", 20, 12)
+    if not ok:
+        print("Not okay")
 
+    video = video_processing.VideoMetadata("test.webm")
 
-def read_palette(path: str) -> np.ndarray:
-    return cv.imread(path, cv.IMREAD_COLOR).reshape(-1, 3).astype(np.float32)
+    # video.generate_video_preview_images(ctx, 3)
+    video.process_video_with_multiprocessing(ctx)
+    ffmpeg_util.concat_all_temp_videos(ctx, False)
+    ffmpeg_util.add_audio_to_export(ctx, video, "complete", False)
 
 
 if __name__ == "__main__":
