@@ -101,7 +101,6 @@ class VideoMetadata:
     def process_video_with_multiprocessing(
         self,
         ctx: util.Context,
-        process_count: int,
     ):
         # Get general meta data on video
 
@@ -110,7 +109,7 @@ class VideoMetadata:
         processes = []
 
         # We discount the last process as we want it to handle all the remaining frames that count not be split properly
-        for i in range(process_count - 1):
+        for i in range(ctx.process_count - 1):
             processes.append(
                 mp.Process(
                     target=self.process_video_chunk,
