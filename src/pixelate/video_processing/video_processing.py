@@ -7,6 +7,7 @@ import numpy as np
 TEMP_VIDEO_PREFIX = "temp_video"
 PREVIEW_IMAGE_PREFIX = "preview"
 
+
 class VideoMetadata:
     def __init__(self, file_path: str):
         video = cv.VideoCapture(file_path)
@@ -20,26 +21,35 @@ class VideoMetadata:
 
         video.release()
 
-    def generate_video_preview_images(self, palette_array: np.ndarray, n: int, output_dir: str):
-        #TODO: Make sure to have
+    def generate_video_preview_images(
+            self, palette_array: np.ndarray, pixel_size: int, n: int, output_dir: str
+    ):
         # We will generate n preview images which the first one being the first frame of the video
         # and then other n-1 being evenly spaces throughout the video
+
+        video = cv.VideoCapture(self.file_path)
+
         interval = self.duration / n
         for i in range(n):
             self.process_video_preview_image(
-                palette_array, interval * i, os.path.join(output_dir, f"{PREVIEW_IMAGE_PREFIX}_{i}.png")
+                video,
+                palette_array,
+                pixel_size,
+                interval * i,
+                os.path.join(output_dir, f"{PREVIEW_IMAGE_PREFIX}_{i}.png"),
             )
+
+        video.release()
 
     def process_video_preview_image(
         self,
+        video: cv.VideoCapture,
         palette_array: np.ndarray,
         pixel_size: int,
         timestamp: float,
         output_path: str,
     ):
         assert timestamp >= 0
-        video = cv.VideoCapture(self.file_path)
-
         assert timestamp < (self.frame_count / self.fps)
 
         start_frame = int(self.fps * timestamp)
@@ -49,8 +59,6 @@ class VideoMetadata:
         ok, image = video.read()
         if not ok:
             print("Unable to read frame of video")
-
-        video.release()
 
         # Reshape the image to group up the pixels by the PIXEL_SIZE and get the mean of the RGB values
         # we cast as a float32 here so we don't run into overflow issues when we do the squared distance computations
@@ -92,7 +100,11 @@ class VideoMetadata:
         cv.imwrite(output_path, pixelated)
 
     def process_video_with_multiprocessing(
-            self, palette_array: np.ndarray, pixel_size: int, process_count: int, output_dir: str
+        self,
+        palette_array: np.ndarray,
+        pixel_size: int,
+        process_count: int,
+        output_dir: str,
     ):
         # Get general meta data on video
 
@@ -134,7 +146,6 @@ class VideoMetadata:
 
         for process in processes:
             process.join()
-
 
     def process_video_chunk(
         self,
