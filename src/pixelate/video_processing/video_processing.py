@@ -6,9 +6,6 @@ import numpy as np
 
 from pixelate.util import util
 
-TEMP_VIDEO_PREFIX = "temp_video"
-PREVIEW_IMAGE_PREFIX = "preview"
-
 
 class VideoMetadata:
     def __init__(self, file_path: str):
@@ -94,7 +91,9 @@ class VideoMetadata:
 
         # Write the frame to the image, no resize here because we can do it on the frontend so we can save space here
         cv.imwrite(
-            os.path.join(ctx.output_dir, f"{PREVIEW_IMAGE_PREFIX}_{start_frame}.png"),
+            os.path.join(
+                ctx.output_dir, f"{ctx.preview_image_prefix}_{start_frame}.png"
+            ),
             pixelated,
         )
 
@@ -104,7 +103,7 @@ class VideoMetadata:
     ):
         # Get general meta data on video
 
-        frame_per_process = self.frame_count // process_count
+        frame_per_process = self.frame_count // ctx.process_count
 
         processes = []
 
@@ -128,8 +127,8 @@ class VideoMetadata:
                 target=self.process_video_chunk,
                 args=(
                     ctx,
-                    process_count - 1,
-                    (process_count - 1) * frame_per_process,
+                    ctx.process_count - 1,
+                    (ctx.process_count - 1) * frame_per_process,
                     self.frame_count,
                 ),
             )
@@ -154,7 +153,7 @@ class VideoMetadata:
         processed_count = 0
 
         output_video = cv.VideoWriter(
-            os.path.join(ctx.output_dir, f"{TEMP_VIDEO_PREFIX}_{index}.mp4"),
+            os.path.join(ctx.output_dir, f"{ctx.temp_video_prefix}_{index}.mp4"),
             cv.VideoWriter_fourcc(*"mp4v"),
             self.fps,
             (self.width, self.height),
