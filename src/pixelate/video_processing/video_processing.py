@@ -4,6 +4,8 @@ import os.path
 import cv2 as cv
 import numpy as np
 
+from pixelate.util import util
+
 TEMP_VIDEO_PREFIX = "temp_video"
 PREVIEW_IMAGE_PREFIX = "preview"
 
@@ -21,9 +23,7 @@ class VideoMetadata:
 
         video.release()
 
-    def generate_video_preview_images(
-            self, palette_array: np.ndarray, pixel_size: int, n: int, output_dir: str
-    ):
+    def generate_video_preview_images(self, ctx: util.Context, n: int):
         # We will generate n preview images which the first one being the first frame of the video
         # and then other n-1 being evenly spaces throughout the video
 
@@ -32,22 +32,18 @@ class VideoMetadata:
         interval = self.duration / n
         for i in range(n):
             self.process_video_preview_image(
+                ctx,
                 video,
-                palette_array,
-                pixel_size,
                 interval * i,
-                os.path.join(output_dir, f"{PREVIEW_IMAGE_PREFIX}_{i}.png"),
             )
 
         video.release()
 
     def process_video_preview_image(
         self,
+        ctx: util.Context,
         video: cv.VideoCapture,
-        palette_array: np.ndarray,
-        pixel_size: int,
         timestamp: float,
-        output_path: str,
     ):
         assert timestamp >= 0
         assert timestamp < (self.frame_count / self.fps)
@@ -64,10 +60,10 @@ class VideoMetadata:
         # we cast as a float32 here so we don't run into overflow issues when we do the squared distance computations
         group_pixel_mean = (
             image.reshape(
-                self.height // pixel_size,
-                pixel_size,
-                self.width // pixel_size,
-                pixel_size,
+                self.height // ctx.pixel_size,
+                ctx.pixel_size,
+                self.width // ctx.pixel_size,
+                ctx.pixel_size,
                 3,
             )
             .mean(axis=(1, 3))
@@ -80,7 +76,7 @@ class VideoMetadata:
         squared_distances = np.sum(
             (
                 group_pixel_mean.reshape(-1, 3)[:, None, :]
-                - palette_array.astype(np.float32)[None, :, :]
+                - ctx.palette.astype(np.float32)[None, :, :]
             )
             ** 2,
             axis=2,
@@ -91,20 +87,21 @@ class VideoMetadata:
 
         # Map the indexes to the actual colours on the palette
         pixelated = (
-            palette_array[colour_indexes]
-            .reshape(self.height // pixel_size, self.width // pixel_size, 3)
+            ctx.palette[colour_indexes]
+            .reshape(self.height // ctx.pixel_size, self.width // ctx.pixel_size, 3)
             .astype(np.uint8)
         )
 
         # Write the frame to the image, no resize here because we can do it on the frontend so we can save space here
-        cv.imwrite(output_path, pixelated)
+        cv.imwrite(
+            os.path.join(ctx.output_dir, f"{PREVIEW_IMAGE_PREFIX}_{start_frame}.png"),
+            pixelated,
+        )
 
     def process_video_with_multiprocessing(
         self,
-        palette_array: np.ndarray,
-        pixel_size: int,
+        ctx: util.Context,
         process_count: int,
-        output_dir: str,
     ):
         # Get general meta data on video
 
@@ -118,12 +115,10 @@ class VideoMetadata:
                 mp.Process(
                     target=self.process_video_chunk,
                     args=(
-                        palette_array,
-                        pixel_size,
+                        ctx,
                         i,
                         i * frame_per_process,
                         (i + 1) * frame_per_process,
-                        output_dir,
                     ),
                 )
             )
@@ -133,12 +128,10 @@ class VideoMetadata:
             mp.Process(
                 target=self.process_video_chunk,
                 args=(
-                    palette_array,
-                    pixel_size,
+                    ctx,
                     process_count - 1,
                     (process_count - 1) * frame_per_process,
                     self.frame_count,
-                    output_dir,
                 ),
             )
         )
@@ -149,12 +142,10 @@ class VideoMetadata:
 
     def process_video_chunk(
         self,
-        palette_array: np.ndarray,
-        pixel_size: int,
+        ctx: util.Context,
         index: int,
         start_frame: int,
         end_frame: int,
-        output_dir: str,
     ):
         print(f"Begining Process {index}")
         video = cv.VideoCapture(self.file_path)
@@ -164,7 +155,7 @@ class VideoMetadata:
         processed_count = 0
 
         output_video = cv.VideoWriter(
-            os.path.join(output_dir, f"{TEMP_VIDEO_PREFIX}_{index}.mp4"),
+            os.path.join(ctx.output_dir, f"{TEMP_VIDEO_PREFIX}_{index}.mp4"),
             cv.VideoWriter_fourcc(*"mp4v"),
             self.fps,
             (self.width, self.height),
@@ -180,10 +171,10 @@ class VideoMetadata:
             # we cast as a float32 here so we don't run into overflow issues when we do the squared distance computations
             group_pixel_mean = (
                 image.reshape(
-                    self.height // pixel_size,
-                    pixel_size,
-                    self.width // pixel_size,
-                    pixel_size,
+                    self.height // ctx.pixel_size,
+                    ctx.pixel_size,
+                    self.width // ctx.pixel_size,
+                    ctx.pixel_size,
                     3,
                 )
                 .mean(axis=(1, 3))
@@ -196,7 +187,7 @@ class VideoMetadata:
             squared_distances = np.sum(
                 (
                     group_pixel_mean.reshape(-1, 3)[:, None, :]
-                    - palette_array.astype(np.float32)[None, :, :]
+                    - ctx.palette.astype(np.float32)[None, :, :]
                 )
                 ** 2,
                 axis=2,
@@ -207,8 +198,8 @@ class VideoMetadata:
 
             # Map the indexes to the actual colours on the palette
             pixelated = (
-                palette_array[colour_indexes]
-                .reshape(self.height // pixel_size, self.width // pixel_size, 3)
+                ctx.palette[colour_indexes]
+                .reshape(self.height // ctx.pixel_size, self.width // ctx.pixel_size, 3)
                 .astype(np.uint8)
             )
 
