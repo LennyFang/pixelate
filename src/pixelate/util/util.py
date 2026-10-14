@@ -3,15 +3,32 @@ import os
 import cv2 as cv
 import numpy as np
 
+TEMP_VIDEO_PREFIX = "temp_video"
+COMBINED_VIDEO_NAME = "combined"
+PREVIEW_IMAGE_PREFIX = "preview"
+
 
 class Context:
     def __init__(
-        self, palette_path: str, output_dir: str, pixel_size: int, process_count: int
+        self,
+        palette_path: str,
+        output_dir: str,
+        pixel_size: int,
+        process_count: int,
+        temp_video_prefix=TEMP_VIDEO_PREFIX,
+        combined_video_name=COMBINED_VIDEO_NAME,
+        preview_image_prefix=PREVIEW_IMAGE_PREFIX,
     ):
         self.palette = read_palette(palette_path)
         self.palette_path = palette_path
+
         self.output_dir = output_dir
+        self.temp_video_prefix = temp_video_prefix
+        self.combined_video_name = combined_video_name
+        self.preview_image_prefix = preview_image_prefix
+
         self.pixel_size = pixel_size
+
         self.process_count = process_count
 
     @classmethod
