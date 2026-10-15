@@ -20,6 +20,11 @@ class VideoMetadata:
 
         video.release()
 
+    def get_valid_pixel_sizes(self) -> list[int]:
+        gcd = util.gcd(self.width, self.height)
+        primes = util.prime_factorization(gcd)
+        return util.factors_from_primes(primes)
+
     def generate_video_preview_images(self, ctx: util.Context, n: int):
         # We will generate n preview images which the first one being the first frame of the video
         # and then other n-1 being evenly spaces throughout the video
