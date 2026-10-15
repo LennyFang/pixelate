@@ -3,6 +3,35 @@ import os
 import cv2 as cv
 import numpy as np
 
+PRIME_NUMBERS = [
+    2,
+    3,
+    5,
+    7,
+    11,
+    13,
+    17,
+    19,
+    23,
+    29,
+    31,
+    37,
+    41,
+    43,
+    47,
+    53,
+    59,
+    61,
+    67,
+    71,
+    73,
+    79,
+    83,
+    89,
+    97,
+    101,
+]
+
 TEMP_VIDEO_PREFIX = "temp_video"
 COMBINED_VIDEO_NAME = "combined"
 PREVIEW_IMAGE_PREFIX = "preview"
@@ -72,3 +101,48 @@ def read_palette(path: str) -> np.ndarray:
     return np.unique(
         cv.imread(path, cv.IMREAD_COLOR).reshape(-1, 3).astype(np.uint8), axis=0
     )
+
+
+def gcd(a: int, b: int):
+    assert a > 0
+    assert b > 0
+    while b != 0:
+        (a, b) = (b, a % b)
+    return a
+
+
+def prime_factorization(n: int) -> dict[int, int]:
+    counts = {}
+    i = 0
+    while i < len(PRIME_NUMBERS):
+        prime = PRIME_NUMBERS[-(i + 1)]
+
+        if n % prime != 0:
+            i += 1
+            continue
+
+        n = n // prime
+
+        if counts.get(prime) is None:
+            counts[prime] = 1
+        else:
+            counts[prime] += 1
+
+    return counts
+
+
+def factors_from_primes(counts: dict[int, int]) -> list[int]:
+    factors = [1]
+    for prime in PRIME_NUMBERS:
+        if counts.get(prime) is None:
+            continue
+
+        i = 0
+        n = len(factors)
+        while i < n:
+            factor = factors[i]
+            for count in range(counts[prime]):
+                factors.append(factor * (prime ** (count + 1)))
+            i += 1
+
+    return sorted(factors)
