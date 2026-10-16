@@ -1,39 +1,154 @@
 from pixelate.ffmpeg_util import ffmpeg_util
-from pixelate.util import util
+from pixelate.util import util, colours
 from pixelate.video_processing import video_processing
 
 import argparse
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="pixelate", description="pixelate video/images with different palettes")
-    
+    c_ctx = colours.ColourFormatContext()
+
+    parser = argparse.ArgumentParser(
+        prog="pixelate", description="pixelate video/images with different palettes"
+    )
+
     sub_parsers = parser.add_subparsers(dest="subcommand")
 
-    video_parser = sub_parsers.add_parser("video", description="pixelate a video with a specified palette and pixel size")
-    video_parser.add_argument("video_path", nargs=1, type=str, help="the path of the video to be pixelated")
-    video_parser.add_argument("palette_path", nargs=1, type=str, help="the path of the palette image to use for the video")
-    video_parser.add_argument("-p", "--processes", nargs=1, type=int, default=4, help="the amount of processes used to pixelate the video (default: %(default)s)")
-    video_parser.add_argument("-k", "--keep_temp", action="store_true", help="keeps the temporay files after the processing")
-    video_parser.add_argument("-a", "--no_audio", action="store_true", help="removes the original audio from the pixelated version of video")
-    video_parser.add_argument("-r", "--no_resize", action="store_true", help="keeps the pixelated video at reduced size and doesn\'t resize the video the original dimensions")
+    video_parser = sub_parsers.add_parser(
+        "video",
+        description="pixelate a video with a specified palette and pixel size",
+        usage=f"\r{colours.ESC}{colours.BOLD};{colours.GREEN}mUsage: {colours.ESC}{colours.NORMAL};{colours.CYAN}mpixelate video [OPTIONS] video_file palette_file{colours.ESC}{colours.NORMAL}m",
+    )
+    video_parser.add_argument(
+        "video_file",
+        nargs=1,
+        type=str,
+        help="the file path of the video to be pixelated",
+    )
+    video_parser.add_argument(
+        "palette_file",
+        nargs=1,
+        type=str,
+        help="the file path of the palette image to use for the video",
+    )
+    video_parser.add_argument(
+        "-p",
+        "--processes",
+        nargs=1,
+        type=int,
+        default=4,
+        help="the amount of processes used to pixelate the video (default: %(default)s)",
+    )
+    video_parser.add_argument(
+        "-k",
+        "--keep_temp",
+        action="store_true",
+        help="keeps the temporay files after the processing",
+    )
+    video_parser.add_argument(
+        "-a",
+        "--no_audio",
+        action="store_true",
+        help="removes the original audio from the pixelated version of video",
+    )
+    video_parser.add_argument(
+        "-r",
+        "--no_resize",
+        action="store_true",
+        help="keeps the pixelated video at reduced size and doesn't resize the video the original dimensions",
+    )
 
-    image_parser = sub_parsers.add_parser("image", description="pixelate a image with a specified palette and pixel size")
-    image_parser.add_argument("image_path", nargs=1, type=str, help="the path of the image to be pixelated")
-    image_parser.add_argument("palette_path", nargs=1, type=str, help="the path of the palette image to use for the image")
-    image_parser.add_argument("-r", "--no_resize", action="store_true", help="keeps the pixelated image at reduced size and doesn\'t resize the image the original dimensions")
+    image_parser = sub_parsers.add_parser(
+        "image",
+        description="pixelate a image with a specified palette and pixel size",
+        usage=f"\r{colours.ESC}{colours.BOLD};{colours.GREEN}mUsage: {colours.ESC}{colours.NORMAL};{colours.CYAN}mpixelate image [OPTIONS] image_file palette_file{colours.ESC}{colours.NORMAL}m",
+    )
+    image_parser.add_argument(
+        "image_file",
+        nargs=1,
+        type=str,
+        help="the file path of the image to be pixelated",
+    )
+    image_parser.add_argument(
+        "palette_file",
+        nargs=1,
+        type=str,
+        help="the file path of the palette image to use for the image",
+    )
+    image_parser.add_argument(
+        "-r",
+        "--no_resize",
+        action="store_true",
+        help="keeps the pixelated image at reduced size and doesn't resize the image the original dimensions",
+    )
 
-    preview_parser = sub_parsers.add_parser("preview", description="pixelate (n) number of frames from a video with a specified palette and pixel size")
-    preview_parser.add_argument("video_path", nargs=1, type=str, help="the path of the image to be pixelated")
-    preview_parser.add_argument("palette_path", nargs=1, type=str, help="the path of the palette image to use for the image")
-    preview_parser.add_argument("-n", "--number", nargs=1, type=int, default=6, help="the number of preview images to generate (default: %(default)s))")
-    preview_parser.add_argument("-r", "--no_resize", action="store_true", help="keeps the pixelated image at reduced size and doesn\'t resize the image the original dimensions")
+    preview_parser = sub_parsers.add_parser(
+        "preview",
+        description="pixelate (n) number of frames from a video with a specified palette and pixel size",
+        usage=f"\r{colours.ESC}{colours.BOLD};{colours.GREEN}mUsage: {colours.ESC}{colours.NORMAL};{colours.CYAN}mpixelate preview [OPTIONS] video_file palette_file{colours.ESC}{colours.NORMAL}m",
+    )
+    preview_parser.add_argument(
+        "video_file",
+        nargs=1,
+        type=str,
+        help="the file path of the image to be pixelated",
+    )
+    preview_parser.add_argument(
+        "palette_file",
+        nargs=1,
+        type=str,
+        help="the file path of the palette image to use for the image",
+    )
+    preview_parser.add_argument(
+        "-n",
+        "--number",
+        nargs=1,
+        type=int,
+        default=6,
+        help="the number of preview images to generate (default: %(default)s)",
+    )
+    preview_parser.add_argument(
+        "-r",
+        "--no_resize",
+        action="store_true",
+        help="keeps the pixelated image at reduced size and doesn't resize the image the original dimensions",
+    )
 
     args = parser.parse_args()
 
     if args.subcommand is None:
         # Give usage and show off the sub commands like in uv
-        pass
+        print("A CLI application to pixelate video/images with different palettes")
+        print()
+        c_ctx.push(colours.ColourFormat(colours.GREEN, colours.BOLD))
+
+        print("Usage: ", end="")
+
+        c_ctx.push(colours.ColourFormat(colours.CYAN, colours.NORMAL))
+        print("pixelate <COMMAND> [OPTIONS]\n")
+        c_ctx.pop()
+
+        print("Commands:")
+        c_ctx.push(colours.ColourFormat(colours.CYAN, colours.BOLD))
+
+        print(f"\t{'video':10}", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print("pixelate a video with a specified palette and pixel size")
+        c_ctx.pop()
+
+        print(f"\t{'image':10}", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print("pixelate a image with a specified palette and pixel size")
+        c_ctx.pop()
+
+        print(f"\t{'preview':10}", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(
+            "pixelate (n) number of frames from a video with a specified palette and pixel size"
+        )
+        c_ctx.pop()
+        c_ctx.clear()
+
     print(args)
 
     # ctx, ok = util.Context.create("test.png", "output", 20, 12)
