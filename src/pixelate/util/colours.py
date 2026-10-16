@@ -15,6 +15,7 @@ MAGENTA = "35"
 CYAN = "36"
 WHITE = "37"
 
+
 class ColourFormat:
     def __init__(self, colour=WHITE, emphasis=RESET):
         self.colour = colour
@@ -22,6 +23,7 @@ class ColourFormat:
 
     def use(self):
         print(f"{ESC}{self.emphasis};{self.colour}m", end="")
+
 
 class ColourFormatContext:
     def __init__(self):
@@ -42,7 +44,7 @@ class ColourFormatContext:
 
         if len(self.stack) > 0:
             self.stack[-1].use()
-    
+
     def clear(self):
         self.stack.clear()
         self.clear_current_colour()
