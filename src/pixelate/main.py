@@ -3,6 +3,10 @@ from pixelate.util import util, colours
 from pixelate.video_processing import video_processing
 
 import argparse
+DEFAULT_PROCESSES = 4
+DEFAULT_VIDEO_OUTPUT = "pixelate.mp4"
+DEFAULT_IMAGE_OUTPUT = "pixelate.png"
+DEFAULT_PREVIEW_OUTPUT_DIR = os.getcwd()
 
 
 def main():
@@ -57,6 +61,13 @@ def main():
         action="store_true",
         help="keeps the pixelated video at reduced size and doesn't resize the video the original dimensions",
     )
+    video_parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=DEFAULT_VIDEO_OUTPUT,
+        help="the output file (default: %(default)s)",
+    )
 
     image_parser = sub_parsers.add_parser(
         "image",
@@ -80,6 +91,13 @@ def main():
         "--no_resize",
         action="store_true",
         help="keeps the pixelated image at reduced size and doesn't resize the image the original dimensions",
+    )
+    image_parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=DEFAULT_IMAGE_OUTPUT,
+        help="the output file (default: %(default)s)",
     )
 
     preview_parser = sub_parsers.add_parser(
@@ -112,6 +130,13 @@ def main():
         "--no_resize",
         action="store_true",
         help="keeps the pixelated image at reduced size and doesn't resize the image the original dimensions",
+    )
+    preview_parser.add_argument(
+        "-o",
+        "--output_dir",
+        type=str,
+        default=DEFAULT_PREVIEW_OUTPUT_DIR,
+        help="the output directory of the preview images (default: %(default)s)",
     )
 
     args = parser.parse_args()
