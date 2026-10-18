@@ -42,8 +42,11 @@ class Context:
         self,
         palette_path: str,
         output_dir: str,
+        output_path: str,
         pixel_size: int,
         process_count: int,
+        no_audio: bool,
+        no_resize: bool,
         temp_video_prefix=TEMP_VIDEO_PREFIX,
         combined_video_name=COMBINED_VIDEO_NAME,
         preview_image_prefix=PREVIEW_IMAGE_PREFIX,
@@ -52,6 +55,7 @@ class Context:
         self.palette_path = palette_path
 
         self.output_dir = output_dir
+        self.output_path = output_path
         self.temp_video_prefix = temp_video_prefix
         self.combined_video_name = combined_video_name
         self.preview_image_prefix = preview_image_prefix
@@ -59,6 +63,9 @@ class Context:
         self.pixel_size = pixel_size
 
         self.process_count = process_count
+
+        self.no_audio = False
+        self.no_resize = False
 
     @classmethod
     def create(
