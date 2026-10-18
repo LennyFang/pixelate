@@ -69,16 +69,10 @@ class Context:
 
     @classmethod
     def create(
-        cls, palette_path: str, output_dir: str, pixel_size: int, process_count: int
+        cls, palette_path: str, output_path: str, pixel_size: int, process_count: int
     ):
         # Check for valid palette_path
-        if not os.path.exists(palette_path):
-            return None, False
         if palette_path[palette_path.find(".") + 1 :] not in ["png", "jpg", "jpeg"]:
-            return None, False
-
-        # Check if the output_dir is valid
-        if not os.path.exists(output_dir):
             return None, False
 
         # Check if the pixel_size is valid
