@@ -298,10 +298,54 @@ def main():
         c_ctx.clear()
 
     elif args.subcommand == "image":
-        pass
+        c_ctx.push(colours.ColourFormat(colours.RED, colours.BOLD))
+        if not os.path.isfile(args.image_file[0]):
+            print("Error: ", end="")
+            c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+            print(f"{args.image_file[0]} does not exist file")
+            c_ctx.pop()
+            return
+
+        if not os.path.isfile(args.palette_file[0]):
+            print("Error: ", end="")
+            c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+            print(f"{args.palette_file[0]} does not exist file")
+            c_ctx.pop()
+            return
+
+        output_dir, output_file = os.path.split(args.output)
+
+        if args.output != DEFAULT_IMAGE_OUTPUT:
+            if args.output[-1] == "/":
+                print("Error: ", end="")
+                c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+                print(f"{args.output} is not a valid file path")
+                c_ctx.pop()
+                return
+
+            if args.output.find(".") == -1:
+                print("Error: ", end="")
+                c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+                print(f"{args.output} is has no file extension")
+                c_ctx.pop()
+                return
+
+            if not os.path.isdir(output_dir) and output_dir != "":
+                print("Error: ", end="")
+                c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+                print(f"{output_dir} is not a valid directory")
+                c_ctx.pop()
+                return
+
+        output_dir = os.getcwd() if output_dir == "" else output_dir
+
+        c_ctx.pop()
+
         # args.image_file[0]
         # args.palette_file[0]
+        # args.output
         # args.no_resize
+
     elif args.subcommand == "preview":
         pass
         # args.video_file[0]
