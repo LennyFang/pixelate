@@ -94,13 +94,28 @@ class VideoMetadata:
             .astype(np.uint8)
         )
 
-        # Write the frame to the image, no resize here because we can do it on the frontend so we can save space here
-        cv.imwrite(
-            os.path.join(
-                ctx.output_dir, f"{ctx.preview_image_prefix}_{start_frame}.png"
-            ),
-            pixelated,
-        )
+        # NOTE: There are no two seperate functions for the method for with or without resize because
+        # the preivew subcommand should only be run at most a few dozen times so the branching cost is not a deal breaker
+
+        # Write the frame to the image
+        if ctx.no_resize:
+            cv.imwrite(
+                os.path.join(
+                    ctx.output_dir, f"{ctx.preview_image_prefix}_{start_frame}.png"
+                ),
+                pixelated,
+            )
+        else:
+            cv.imwrite(
+                os.path.join(
+                    ctx.output_dir, f"{ctx.preview_image_prefix}_{start_frame}.png"
+                ),
+                cv.resize(
+                    pixelated,
+                    dsize=(self.width, self.height),
+                    interpolation=cv.INTER_NEAREST,
+                ),
+            )
 
     def process_video_with_multiprocessing(
         self,
