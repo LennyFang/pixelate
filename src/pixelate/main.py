@@ -236,6 +236,8 @@ def main():
             selected_pixel_size = int(input("Pixel Size: "))
             c_ctx.pop()
 
+        c_ctx.clear()
+
         ctx = util.Context(
             args.palette_file[0],
             output_dir,
@@ -247,9 +249,15 @@ def main():
         )
 
         video_metadata.process_video_with_multiprocessing(ctx)
+
+        print("Finshed processing chunks")
+
+        print("Concating all the chunks")
         ffmpeg_util.concat_all_temp_videos(ctx, args.keep_temp)
+        print("Done concat")
 
         if not args.no_audio:
+            print("Adding audio")
             ffmpeg_util.add_audio_to_export(ctx, video_metadata, args.keep_temp)
         else:
             # We have to rename the temp combined file
@@ -260,7 +268,34 @@ def main():
                 ),
                 ctx.output_path,
             )
+
         # TODO: Some nice formated output message
+        c_ctx.push(colours.ColourFormat(colours.GREEN, colours.BOLD))
+        print("\nVideo has finished processing!")
+
+        c_ctx.push(colours.ColourFormat(colours.CYAN, colours.NORMAL))
+        print("File Path: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{ctx.output_path}")
+
+        c_ctx.pop()
+        print("Pixel Size: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{ctx.pixel_size}")
+
+        c_ctx.pop()
+        print("Output Resolution: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{video_metadata.width}x{video_metadata.height}")
+
+        c_ctx.pop()
+        print("Pixel Resolution: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(
+            f"{video_metadata.width // ctx.pixel_size}x{video_metadata.height // ctx.pixel_size}"
+        )
+
+        c_ctx.clear()
 
     elif args.subcommand == "image":
         pass
