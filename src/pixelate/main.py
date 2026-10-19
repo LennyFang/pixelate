@@ -126,7 +126,7 @@ def main():
         "--number",
         nargs=1,
         type=int,
-        default=6,
+        default=[6],
         help="the number of preview images to generate (default: %(default)s)",
     )
     preview_parser.add_argument(
@@ -248,6 +248,7 @@ def main():
             args.no_resize,
         )
 
+        # TODO: Add in some progress stuff
         video_metadata.process_video_with_multiprocessing(ctx)
 
         print("Finshed processing chunks")
@@ -269,7 +270,6 @@ def main():
                 ctx.output_path,
             )
 
-        # TODO: Some nice formated output message
         c_ctx.push(colours.ColourFormat(colours.GREEN, colours.BOLD))
         print("\nVideo has finished processing!")
 
@@ -347,7 +347,83 @@ def main():
         # args.no_resize
 
     elif args.subcommand == "preview":
-        pass
+        c_ctx.push(colours.ColourFormat(colours.RED, colours.BOLD))
+        if not os.path.isfile(args.video_file[0]):
+            print("Error: ", end="")
+            c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+            print(f"{args.video_file[0]} does not exist file")
+            c_ctx.pop()
+            return
+
+        if not os.path.isfile(args.palette_file[0]):
+            print("Error: ", end="")
+            c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+            print(f"{args.palette_file[0]} does not exist file")
+            c_ctx.pop()
+            return
+
+        if not os.path.isdir(args.output_dir):
+            print("Error: ", end="")
+            c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+            print(f"directory {args.output_dir} does not exist")
+            c_ctx.pop()
+            return
+
+        video_metadata = video_processing.VideoMetadata(args.video_file[0])
+        pixel_sizes = video_metadata.get_valid_pixel_sizes()
+        selected_pixel_size = -1
+
+        c_ctx.push(colours.ColourFormat(colours.CYAN, colours.NORMAL))
+        while selected_pixel_size not in pixel_sizes:
+            print("Please choose a pixel size from this list", end="")
+            c_ctx.push(colours.ColourFormat(colours.CYAN, colours.BOLD))
+            print(f" {pixel_sizes}")
+            c_ctx.pop()
+
+            c_ctx.push(colours.ColourFormat(colours.GREEN, colours.BOLD))
+            selected_pixel_size = int(input("Pixel Size: "))
+            c_ctx.pop()
+
+        c_ctx.clear()
+
+        ctx = util.Context(
+            args.palette_file[0],
+            args.output_dir,
+            None,
+            selected_pixel_size,
+            1,
+            False,
+            args.no_resize,
+        )
+
+        # TODO: Maybe have a progress bar
+        video_metadata.generate_video_preview_images(ctx, args.number[0])
+
+        c_ctx.push(colours.ColourFormat(colours.GREEN, colours.BOLD))
+        print("\nPreview images have finished processing!")
+
+        c_ctx.push(colours.ColourFormat(colours.CYAN, colours.NORMAL))
+        print("Output Directory: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{ctx.output_dir}")
+
+        c_ctx.pop()
+        print("Pixel Size: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{ctx.pixel_size}")
+
+        c_ctx.pop()
+        print("Output Resolution: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{video_metadata.width}x{video_metadata.height}")
+
+        c_ctx.pop()
+        print("Pixel Resolution: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(
+            f"{video_metadata.width // ctx.pixel_size}x{video_metadata.height // ctx.pixel_size}"
+        )
+
         # args.video_file[0]
         # args.palette_file[0]
         # args.number
