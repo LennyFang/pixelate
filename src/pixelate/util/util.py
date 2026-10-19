@@ -64,8 +64,8 @@ class Context:
 
         self.process_count = process_count
 
-        self.no_audio = False
-        self.no_resize = False
+        self.no_audio = no_audio
+        self.no_resize = no_resize
 
     @classmethod
     def create(
@@ -82,7 +82,7 @@ class Context:
         if process_count < 1:
             return None, False
 
-        return cls(palette_path, output_dir, pixel_size, process_count), True
+        return cls(palette_path, output_path, pixel_size, process_count), True
 
     def set_palette(self) -> bool:
         if not os.path.exists(self.palette_path):
