@@ -117,6 +117,7 @@ class VideoMetadata:
             if ctx.no_resize
             else self.process_video_chunk
         )
+
         # We discount the last process as we want it to handle all the remaining frames that count not be split properly
         for i in range(ctx.process_count - 1):
             processes.append(
@@ -148,7 +149,6 @@ class VideoMetadata:
         for process in processes:
             process.join()
 
-
     def process_video_chunk(
         self,
         ctx: util.Context,
@@ -170,7 +170,7 @@ class VideoMetadata:
             os.path.join(ctx.output_dir, f"{ctx.temp_video_prefix}_{index}.mp4"),
             cv.VideoWriter_fourcc(*"mp4v"),
             self.fps,
-            (pixelated_width, pixelated_height),
+            (self.width, self.height),
         )
 
         while start_frame + processed_count < end_frame:
@@ -251,7 +251,7 @@ class VideoMetadata:
             os.path.join(ctx.output_dir, f"{ctx.temp_video_prefix}_{index}.mp4"),
             cv.VideoWriter_fourcc(*"mp4v"),
             self.fps,
-            (pixelate_width, pixelated_height),
+            (pixelated_width, pixelated_height),
         )
 
         while start_frame + processed_count < end_frame:
