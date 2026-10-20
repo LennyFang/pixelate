@@ -42,6 +42,7 @@ class Context:
         self,
         palette_path: str,
         output_dir: str,
+        output_file: str,
         output_path: str,
         pixel_size: int,
         process_count: int,
@@ -54,8 +55,9 @@ class Context:
         self.palette = read_palette(palette_path)
         self.palette_path = palette_path
 
-        self.output_dir = output_dir
-        self.output_path = output_path
+        self.output_dir = output_dir  # the directory
+        self.output_file = output_file  # only the file name and extension
+        self.output_path = output_path  # the combination of the directory, the file name, and the file extension
         self.temp_video_prefix = temp_video_prefix
         self.combined_video_name = combined_video_name
         self.preview_image_prefix = preview_image_prefix

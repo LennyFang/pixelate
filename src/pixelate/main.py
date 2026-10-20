@@ -2,9 +2,9 @@ import argparse
 import os
 
 from pixelate.ffmpeg_util import ffmpeg_util
+from pixelate.image_processing import image_processing
 from pixelate.util import colours, util
 from pixelate.video_processing import video_processing
-from pixelate.image_processing import image_processing
 
 DEFAULT_PROCESSES = 4
 DEFAULT_VIDEO_OUTPUT = "pixelate.mp4"
@@ -204,6 +204,8 @@ def main():
                 c_ctx.pop()
                 return
 
+            # TODO: Files can have . in their name and it can not be the file extension as well
+            # might want to fix this later on
             if args.output.find(".") == -1:
                 print("Error: ", end="")
                 c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
@@ -243,6 +245,7 @@ def main():
             args.palette_file[0],
             output_dir,
             output_file,
+            args.output,
             selected_pixel_size,
             args.processes[0],
             args.no_audio,
@@ -443,6 +446,7 @@ def main():
             args.palette_file[0],
             args.output_dir,
             None,
+            args.output,
             selected_pixel_size,
             1,
             False,
