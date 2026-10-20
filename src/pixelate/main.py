@@ -2,6 +2,7 @@ import argparse
 import os
 
 from pixelate.ffmpeg_util import ffmpeg_util
+from pixelate.image_processing import image_processing
 from pixelate.util import colours, util
 from pixelate.video_processing import video_processing
 
@@ -203,6 +204,8 @@ def main():
                 c_ctx.pop()
                 return
 
+            # TODO: Files can have . in their name and it can not be the file extension as well
+            # might want to fix this later on
             if args.output.find(".") == -1:
                 print("Error: ", end="")
                 c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
@@ -242,6 +245,7 @@ def main():
             args.palette_file[0],
             output_dir,
             output_file,
+            args.output,
             selected_pixel_size,
             args.processes[0],
             args.no_audio,
@@ -341,10 +345,62 @@ def main():
 
         c_ctx.pop()
 
-        # args.image_file[0]
-        # args.palette_file[0]
-        # args.output
-        # args.no_resize
+        image_metadata = image_processing.ImageMetadata(args.image_file[0])
+        pixel_sizes = image_metadata.get_valid_pixel_sizes()
+        selected_pixel_size = -1
+
+        c_ctx.push(colours.ColourFormat(colours.CYAN, colours.NORMAL))
+        while selected_pixel_size not in pixel_sizes:
+            print("Please choose a pixel size from this list", end="")
+            c_ctx.push(colours.ColourFormat(colours.CYAN, colours.BOLD))
+            print(f" {pixel_sizes}")
+            c_ctx.pop()
+
+            c_ctx.push(colours.ColourFormat(colours.GREEN, colours.BOLD))
+            selected_pixel_size = int(input("Pixel Size: "))
+            c_ctx.pop()
+
+        c_ctx.clear()
+
+        ctx = util.Context(
+            args.palette_file[0],
+            output_dir,
+            output_file,
+            args.output,
+            selected_pixel_size,
+            1,
+            False,
+            args.no_resize,
+        )
+
+        image_metadata.process_image(ctx)
+
+        c_ctx.push(colours.ColourFormat(colours.GREEN, colours.BOLD))
+        print("\nImage has finished processing!")
+
+        c_ctx.push(colours.ColourFormat(colours.CYAN, colours.NORMAL))
+        print("File Path: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{ctx.output_path}")
+
+        c_ctx.pop()
+        print("Pixel Size: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{ctx.pixel_size}")
+
+        c_ctx.pop()
+        print("Output Resolution: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(f"{image_metadata.width}x{image_metadata.height}")
+
+        c_ctx.pop()
+        print("Pixel Resolution: ", end="")
+        c_ctx.push(colours.ColourFormat(colours.DEFAULT, colours.NORMAL))
+        print(
+            f"{image_metadata.width // ctx.pixel_size}x{image_metadata.height // ctx.pixel_size}"
+        )
+
+        c_ctx.clear()
 
     elif args.subcommand == "preview":
         c_ctx.push(colours.ColourFormat(colours.RED, colours.BOLD))
@@ -390,6 +446,7 @@ def main():
             args.palette_file[0],
             args.output_dir,
             None,
+            args.output,
             selected_pixel_size,
             1,
             False,
