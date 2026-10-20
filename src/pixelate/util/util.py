@@ -42,8 +42,12 @@ class Context:
         self,
         palette_path: str,
         output_dir: str,
+        output_file: str,
+        output_path: str,
         pixel_size: int,
         process_count: int,
+        no_audio: bool,
+        no_resize: bool,
         temp_video_prefix=TEMP_VIDEO_PREFIX,
         combined_video_name=COMBINED_VIDEO_NAME,
         preview_image_prefix=PREVIEW_IMAGE_PREFIX,
@@ -51,7 +55,9 @@ class Context:
         self.palette = read_palette(palette_path)
         self.palette_path = palette_path
 
-        self.output_dir = output_dir
+        self.output_dir = output_dir  # the directory
+        self.output_file = output_file  # only the file name and extension
+        self.output_path = output_path  # the combination of the directory, the file name, and the file extension
         self.temp_video_prefix = temp_video_prefix
         self.combined_video_name = combined_video_name
         self.preview_image_prefix = preview_image_prefix
@@ -60,18 +66,15 @@ class Context:
 
         self.process_count = process_count
 
+        self.no_audio = no_audio
+        self.no_resize = no_resize
+
     @classmethod
     def create(
-        cls, palette_path: str, output_dir: str, pixel_size: int, process_count: int
+        cls, palette_path: str, output_path: str, pixel_size: int, process_count: int
     ):
         # Check for valid palette_path
-        if not os.path.exists(palette_path):
-            return None, False
         if palette_path[palette_path.find(".") + 1 :] not in ["png", "jpg", "jpeg"]:
-            return None, False
-
-        # Check if the output_dir is valid
-        if not os.path.exists(output_dir):
             return None, False
 
         # Check if the pixel_size is valid
@@ -81,7 +84,7 @@ class Context:
         if process_count < 1:
             return None, False
 
-        return cls(palette_path, output_dir, pixel_size, process_count), True
+        return cls(palette_path, output_path, pixel_size, process_count), True
 
     def set_palette(self) -> bool:
         if not os.path.exists(self.palette_path):

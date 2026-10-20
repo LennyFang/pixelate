@@ -18,7 +18,7 @@ def concat_all_temp_videos(ctx: util.Context, keep_temp: bool):
         os.path.join(
             ctx.output_dir, f"{ctx.temp_video_prefix}_{ctx.combined_video_name}.mp4"
         )
-    ).run()
+    ).run(quiet=True, overwrite_output=True)
 
     if not keep_temp:
         for i in range(ctx.process_count):
@@ -28,7 +28,6 @@ def concat_all_temp_videos(ctx: util.Context, keep_temp: bool):
 def add_audio_to_export(
     ctx: util.Context,
     video_metadata: video_processing.VideoMetadata,
-    output_name: str,
     keep_temp: bool,
 ):
     video_input = ffmpeg.input(
@@ -38,9 +37,9 @@ def add_audio_to_export(
     )
     audio_input = ffmpeg.input(video_metadata.file_path).audio
 
-    ffmpeg.output(
-        video_input, audio_input, os.path.join(ctx.output_dir, f"{output_name}.mp4")
-    ).run()
+    ffmpeg.output(video_input, audio_input, ctx.output_path).run(
+        quiet=True, overwrite_output=True
+    )
 
     if not keep_temp:
         print(" --- Cleaning temp video file --- ")
