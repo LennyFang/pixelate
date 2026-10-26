@@ -97,6 +97,10 @@ class VideoMetadata:
             .astype(np.uint8)
         )
 
+        # Apply filters
+        for func in ctx.filters:
+            func(pixelated)
+
         # NOTE: There are no two seperate functions for the method for with or without resize because
         # the preivew subcommand should only be run at most a few dozen times so the branching cost is not a deal breaker
 
