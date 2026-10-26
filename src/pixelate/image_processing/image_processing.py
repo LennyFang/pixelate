@@ -11,6 +11,9 @@ class ImageMetadata:
         self.width = np.shape(self.pixels)[1]
         self.height = np.shape(self.pixels)[0]
 
+    def get_dimensions(self) -> (int, int):
+        return (self.width, self.height)
+
     def get_valid_pixel_sizes(self) -> list[int]:
         gcd = util.gcd(self.width, self.height)
         primes = util.prime_factorization(gcd)
