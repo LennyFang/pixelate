@@ -54,6 +54,9 @@ class ImageMetadata:
             .astype(np.uint8)
         )
 
+        for func in ctx.filters:
+            func(pixelated)
+
         # NOTE: There are no two seperate functions for the method for with or without resize because
         # the preivew subcommand should only be run once so branching is negligible
 
