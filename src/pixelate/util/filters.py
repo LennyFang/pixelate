@@ -5,10 +5,32 @@ import numpy as np
 
 from pixelate.util import util
 
+FILTER_LIST = ["hori-crt", "vert-crt"]
+
+
+DEFAULT_CRT_THRESHOLD = 15
+
 
 class CrtFilterKind(Enum):
     HORIZONTAL = 0
     VERTICAL = 1
+
+
+def parse_filter_str_list(ctx: util.Context, dimension: (int, int), filters: [str]):
+    for s in filters:
+        match s:
+            case "hori-crt":
+                ctx.add_filter(
+                    create_crt_filter(
+                        ctx, dimension, DEFAULT_CRT_THRESHOLD, CrtFilterKind.HORIZONTAL
+                    )
+                )
+            case "vert-crt":
+                ctx.add_filter(
+                    create_crt_filter(
+                        ctx, dimension, DEFAULT_CRT_THRESHOLD, CrtFilterKind.VERTICAL
+                    )
+                )
 
 
 def create_crt_filter(
