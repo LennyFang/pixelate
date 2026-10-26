@@ -233,6 +233,10 @@ class VideoMetadata:
                 .astype(np.uint8)
             )
 
+            # filter
+            for func in ctx.filters:
+                func(pixelated)
+
             # Write the frame to the video but also resize it with nearest neighbour to maintain the pixels
             output_video.write(
                 cv.resize(
@@ -313,6 +317,10 @@ class VideoMetadata:
                 .reshape(pixelated_height, pixelated_width, 3)
                 .astype(np.uint8)
             )
+
+            # filter
+            for func in ctx.filters:
+                func(pixelated)
 
             # Write the frame to the video
             output_video.write(pixelated)
