@@ -20,6 +20,9 @@ class VideoMetadata:
 
         video.release()
 
+    def get_dimensions(self) -> (int, int):
+        return (self.width, self.height)
+
     def get_valid_pixel_sizes(self) -> list[int]:
         gcd = util.gcd(self.width, self.height)
         primes = util.prime_factorization(gcd)
@@ -93,6 +96,10 @@ class VideoMetadata:
             .reshape(self.height // ctx.pixel_size, self.width // ctx.pixel_size, 3)
             .astype(np.uint8)
         )
+
+        # Apply filters
+        for func in ctx.filters:
+            func(pixelated)
 
         # NOTE: There are no two seperate functions for the method for with or without resize because
         # the preivew subcommand should only be run at most a few dozen times so the branching cost is not a deal breaker
@@ -230,6 +237,10 @@ class VideoMetadata:
                 .astype(np.uint8)
             )
 
+            # filter
+            for func in ctx.filters:
+                func(pixelated)
+
             # Write the frame to the video but also resize it with nearest neighbour to maintain the pixels
             output_video.write(
                 cv.resize(
@@ -310,6 +321,10 @@ class VideoMetadata:
                 .reshape(pixelated_height, pixelated_width, 3)
                 .astype(np.uint8)
             )
+
+            # filter
+            for func in ctx.filters:
+                func(pixelated)
 
             # Write the frame to the video
             output_video.write(pixelated)

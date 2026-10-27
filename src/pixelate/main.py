@@ -3,7 +3,7 @@ import os
 
 from pixelate.ffmpeg_util import ffmpeg_util
 from pixelate.image_processing import image_processing
-from pixelate.util import colours, util
+from pixelate.util import colours, filters, util
 from pixelate.video_processing import video_processing
 
 DEFAULT_PROCESSES = 4
@@ -73,6 +73,14 @@ def main():
         default=DEFAULT_VIDEO_OUTPUT,
         help="the output file (default: %(default)s)",
     )
+    video_parser.add_argument(
+        "-f",
+        "--filters",
+        nargs="*",
+        type=str,
+        choices=filters.FILTER_LIST,
+        help="the filters to apply to video",
+    )
 
     image_parser = sub_parsers.add_parser(
         "image",
@@ -103,6 +111,14 @@ def main():
         type=str,
         default=DEFAULT_IMAGE_OUTPUT,
         help="the output file (default: %(default)s)",
+    )
+    image_parser.add_argument(
+        "-f",
+        "--filters",
+        nargs="*",
+        type=str,
+        choices=filters.FILTER_LIST,
+        help="the filters to apply to image",
     )
 
     preview_parser = sub_parsers.add_parser(
@@ -142,6 +158,14 @@ def main():
         type=str,
         default=DEFAULT_PREVIEW_OUTPUT_DIR,
         help="the output directory of the preview images (default: %(default)s)",
+    )
+    preview_parser.add_argument(
+        "-f",
+        "--filters",
+        nargs="*",
+        type=str,
+        choices=filters.FILTER_LIST,
+        help="the filters to apply to the preview images",
     )
 
     args = parser.parse_args()
@@ -250,6 +274,11 @@ def main():
             args.processes[0],
             args.no_audio,
             args.no_resize,
+        )
+
+        # Parse the filters from strings into the their functions
+        filters.parse_filter_str_list(
+            ctx, video_metadata.get_dimensions(), args.filters
         )
 
         # TODO: Add in some progress stuff
@@ -373,6 +402,11 @@ def main():
             args.no_resize,
         )
 
+        # Parse the filters from strings into the their functions
+        filters.parse_filter_str_list(
+            ctx, image_metadata.get_dimensions(), args.filters
+        )
+
         image_metadata.process_image(ctx)
 
         c_ctx.push(colours.ColourFormat(colours.GREEN, colours.BOLD))
@@ -451,6 +485,11 @@ def main():
             1,
             False,
             args.no_resize,
+        )
+
+        # Parse the filters from strings into the their functions
+        filters.parse_filter_str_list(
+            ctx, video_metadata.get_dimensions(), args.filters
         )
 
         # TODO: Maybe have a progress bar

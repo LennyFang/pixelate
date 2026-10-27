@@ -69,6 +69,8 @@ class Context:
         self.no_audio = no_audio
         self.no_resize = no_resize
 
+        self.filters = []
+
     @classmethod
     def create(
         cls, palette_path: str, output_path: str, pixel_size: int, process_count: int
@@ -98,6 +100,9 @@ class Context:
 
         self.palette = read_palette(self.palette_path)
         return True
+
+    def add_filter(self, filter_func):
+        self.filters.append(filter_func)
 
 
 def read_palette(path: str) -> np.ndarray:
